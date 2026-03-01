@@ -5,7 +5,7 @@ import { useChat } from "@ai-sdk/react"
 import { DefaultChatTransport } from "ai"
 import { Button } from "@/components/ui/button"
 import { GhostMascot } from "@/components/ghost-mascot"
-import { Send, Sparkles, Bot, User } from "lucide-react"
+import { Send, Bot, User, AlertTriangle } from "lucide-react"
 
 const STARTER_PROMPTS = [
   "They take hours to reply but are always online. Red flag?",
@@ -21,11 +21,16 @@ export function AIChatbot() {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  const { messages, sendMessage, status } = useChat({
+  const { messages, sendMessage, status, error } = useChat({
     transport: new DefaultChatTransport({ api: "/api/chat" }),
   })
 
   const isLoading = status === "streaming" || status === "submitted"
+  const errorMessage = error
+    ? error.message.includes("credit card") || error.message.includes("AI Gateway") || error.message.includes("402")
+      ? "AI Gateway requires billing setup. Add a credit card in your Vercel dashboard (Settings > Billing) to unlock free AI credits, then try again."
+      : `Something went wrong: ${error.message}`
+    : null
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -126,6 +131,17 @@ export function AIChatbot() {
                 <div className="w-2 h-2 rounded-full bg-primary/60 animate-bounce" style={{ animationDelay: "150ms" }} />
                 <div className="w-2 h-2 rounded-full bg-primary/60 animate-bounce" style={{ animationDelay: "300ms" }} />
               </div>
+            </div>
+          </div>
+        )}
+
+        {errorMessage && (
+          <div className="flex gap-3 animate-fade-up">
+            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-destructive/20 shrink-0">
+              <AlertTriangle className="w-4 h-4 text-destructive" />
+            </div>
+            <div className="max-w-[80%] rounded-2xl rounded-tl-sm px-4 py-3 text-sm leading-relaxed bg-destructive/10 border border-destructive/30 text-foreground">
+              {errorMessage}
             </div>
           </div>
         )}
